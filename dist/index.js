@@ -29030,7 +29030,7 @@ async function run() {
                                 body: matchFoundMessage,
                                 commit_id: context.payload.pull_request.head.sha,
                                 path: currentFile,
-                                side: side,
+                                side,
                                 line: currentLineNumber
                             });
                         }
