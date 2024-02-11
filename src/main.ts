@@ -68,6 +68,11 @@ export async function run(): Promise<void> {
     let newLineNumber = 0
 
     for (const line of lines) {
+      if (line.startsWith('+++ b/')) {
+        currentFile = line.substring('+++ b/'.length)
+        continue
+      }
+
       if (line.startsWith('@@')) {
         // Parse and set the starting line numbers from the hunk header
         const match = line.match(/-(\d+),\d+ \+(\d+),\d+/)
