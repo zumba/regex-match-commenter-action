@@ -29001,14 +29001,29 @@ async function run() {
         const lines = diffData.split('\n');
         let foundMatches = false;
         let currentFile = '';
-        let currentLineNumber = 0;
+        let oldLineNumber = 0;
+        let newLineNumber = 0;
         for (const line of lines) {
-            if (line.startsWith('+++ b/')) {
-                currentFile = line.substring('+++ b/'.length);
-                currentLineNumber = 0; // Reset line number for each new file
+            if (line.startsWith('@@')) {
+                // Parse and set the starting line numbers from the hunk header
+                const match = line.match(/-(\d+),\d+ \+(\d+),\d+/);
+                if (match) {
+                    oldLineNumber = parseInt(match[1], 10) - 1;
+                    newLineNumber = parseInt(match[2], 10) - 1;
+                }
             }
-            else if (line.startsWith('+') || line.startsWith('-')) {
-                currentLineNumber++; // Count only added or removed lines
+            else {
+                // Increment the appropriate line number
+                if (line.startsWith('-')) {
+                    oldLineNumber++;
+                }
+                else if (line.startsWith('+')) {
+                    newLineNumber++;
+                }
+                else {
+                    oldLineNumber++;
+                    newLineNumber++;
+                }
             }
             if (((diffScope === DiffScope.BOTH || diffScope === DiffScope.ADDED) &&
                 line.startsWith('+')) ||
@@ -29031,7 +29046,7 @@ async function run() {
                                 commit_id: context.payload.pull_request.head.sha,
                                 path: currentFile,
                                 side,
-                                line: currentLineNumber
+                                line: side === 'LEFT' ? oldLineNumber : newLineNumber
                             });
                         }
                         else {

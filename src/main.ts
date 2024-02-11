@@ -64,14 +64,27 @@ export async function run(): Promise<void> {
     const lines = (diffData as unknown as string).split('\n')
     let foundMatches = false
     let currentFile = ''
-    let currentLineNumber = 0
+    let oldLineNumber = 0
+    let newLineNumber = 0
 
     for (const line of lines) {
-      if (line.startsWith('+++ b/')) {
-        currentFile = line.substring('+++ b/'.length)
-        currentLineNumber = 0 // Reset line number for each new file
-      } else if (line.startsWith('+') || line.startsWith('-')) {
-        currentLineNumber++ // Count only added or removed lines
+      if (line.startsWith('@@')) {
+        // Parse and set the starting line numbers from the hunk header
+        const match = line.match(/-(\d+),\d+ \+(\d+),\d+/)
+        if (match) {
+          oldLineNumber = parseInt(match[1], 10) - 1
+          newLineNumber = parseInt(match[2], 10) - 1
+        }
+      } else {
+        // Increment the appropriate line number
+        if (line.startsWith('-')) {
+          oldLineNumber++
+        } else if (line.startsWith('+')) {
+          newLineNumber++
+        } else {
+          oldLineNumber++
+          newLineNumber++
+        }
       }
 
       if (
@@ -100,7 +113,7 @@ export async function run(): Promise<void> {
                 commit_id: context.payload.pull_request.head.sha,
                 path: currentFile,
                 side,
-                line: currentLineNumber
+                line: side === 'LEFT' ? oldLineNumber : newLineNumber
               })
             } else {
               core.debug(`Match found but already commented`)
