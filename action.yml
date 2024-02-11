@@ -7,6 +7,10 @@ branding:
   color: 'red'
 
 inputs:
+  github_token:
+    description: 'GitHub token'
+    required: true
+
   regex_patterns:
     description: 'List of regex patterns to search for'
     required: true
