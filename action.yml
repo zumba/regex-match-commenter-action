@@ -1,23 +1,40 @@
-name: 'The name of your action here'
-description: 'Provide a description here'
-author: 'Your name or organization here'
+name: 'Regex Match Commenter Action'
+description: 'Searches for regex patterns in PR diffs and comments on them'
+author: 'Zumba'
 
-# Add your action's branding here. This will appear on the GitHub Marketplace.
 branding:
   icon: 'heart'
   color: 'red'
 
-# Define your inputs here.
 inputs:
-  milliseconds:
-    description: 'Your input description here'
+  regex_patterns:
+    description: 'List of regex patterns to search for'
     required: true
-    default: '1000'
 
-# Define your outputs here.
-outputs:
-  time:
-    description: 'Your output description here'
+  diff_scope:
+    description: 'Scope of the search (added, removed, both)'
+    required: false
+    default: 'both'
+
+  mark_changes_requested:
+    description: 'Mark PR as changes requested if matches are found'
+    required: false
+    default: 'false'
+
+  match_found_message:
+    description: 'Comment message for a regex match'
+    required: false
+    default: 'Regex match found.'
+
+  no_match_found_message:
+    description: 'Comment message when no regex matches are found'
+    required: false
+    default: 'No regex matches found in the diff.'
+
+  changes_requested_message:
+    description: 'Message for marking PR as changes requested'
+    required: false
+    default: 'Changes are requested due to regex match.'
 
 runs:
   using: node20
