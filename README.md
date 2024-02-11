@@ -6,7 +6,7 @@
 [![CodeQL](https://github.com/zumba/regex-match-commenter-action/actions/workflows/codeql-analysis.yml/badge.svg)](https://github.com/zumba/regex-match-commenter-action/actions/workflows/codeql-analysis.yml)
 [![Coverage](./badges/coverage.svg)](./badges/coverage.svg)
 
-This GitHub Action searches for specified regular expression patterns in the changes of a pull request. If matches are found, it can optionally mark the pull request for changes and add inline comments. If no matches are found, a comment is added to the pull request.
+This GitHub Action searches for specified regular expression pattern in the changes of a pull request. If matches are found, it can optionally mark the pull request for changes and add inline comments. If no matches are found, a comment is added to the pull request.
 
 Some use cases are for detecting PII changes on the code. For example, you can monitor if the words `email`, `phone`, `street`, `password`, etc. are part of the changes.
 The match uses regex, so you can also look for variables such as `\w+@\w+.\w+` to look for an actual e-mail address.
@@ -17,9 +17,9 @@ The match uses regex, so you can also look for variables such as `\w+@\w+.\w+` t
 
 **Required** GitHub token for authentication. Typically, this is the GitHub Actions token.
 
-### `regex_patterns`
+### `regex_pattern`
 
-**Required** A comma-separated list of regular expression patterns to search for in the pull request diff.
+**Required** A regular expression pattern to search for in the pull request diff.
 
 ### `diff_scope`
 
@@ -59,7 +59,7 @@ jobs:
       uses: zumba/regex-match-commenter-action@v1
       with:
         github_token: ${{ secrets.GITHUB_TOKEN }}
-        regex_patterns: 'email'
+        regex_pattern: 'email|phone'
         diff_scope: 'both'
         mark_changes_requested: false
         match_found_message: 'Attention needed.'

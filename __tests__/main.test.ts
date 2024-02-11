@@ -30,8 +30,8 @@ describe('action', () => {
       switch (name) {
         case 'github_token':
           return 'gh-token'
-        case 'regex_patterns':
-          return 'pattern1,pattern2'
+        case 'regex_pattern':
+          return 'pattern[12]'
         default:
           return ''
       }

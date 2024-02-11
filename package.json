@@ -1,6 +1,6 @@
 {
   "name": "regex-match-commenter-action",
-  "description": "Searches for regex patterns in PR diffs and comments on them",
+  "description": "Searches for regex pattern in PR diffs and comments on them",
   "version": "0.0.0",
   "author": "",
   "private": true,

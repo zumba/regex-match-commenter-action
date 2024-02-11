@@ -28960,9 +28960,9 @@ var DiffScope;
 async function run() {
     try {
         const token = core.getInput('github_token', { required: true });
-        const regexPatterns = core
-            .getInput('regex_patterns', { required: true })
-            .split(',');
+        const regexPattern = core.getInput('regex_pattern', {
+            required: true
+        });
         const diffScope = (core.getInput('diff_scope') ||
             'both');
         const markChangesRequested = core.getInput('mark_changes_requested') === 'true';
@@ -29033,40 +29033,38 @@ async function run() {
                 line.startsWith('+')) ||
                 ((diffScope === DiffScope.BOTH || diffScope === DiffScope.REMOVED) &&
                     line.startsWith('-'))) {
-                for (const pattern of regexPatterns) {
-                    const regex = new RegExp(pattern);
-                    if (regex.test(line)) {
-                        // Before posting a new comment, check if it already exists
-                        const isDuplicate = existingComments.data.some(comment => comment.body === matchFoundMessage);
-                        if (!isDuplicate) {
-                            core.debug(`Match found`);
-                            foundMatches = true;
-                            const side = line.startsWith('+') ? 'RIGHT' : 'LEFT';
-                            const requestParams = {
-                                owner,
-                                repo,
-                                pull_number: pullRequestNumber,
-                                body: matchFoundMessage,
-                                commit_id: context.payload.pull_request.head.sha,
-                                path: currentFile,
-                                side,
-                                line: side === 'LEFT' ? oldLineNumber : newLineNumber
-                            };
-                            core.debug(JSON.stringify(requestParams));
-                            await octokit.rest.pulls.createReviewComment({
-                                owner,
-                                repo,
-                                pull_number: pullRequestNumber,
-                                body: matchFoundMessage,
-                                commit_id: context.payload.pull_request.head.sha,
-                                path: currentFile,
-                                side,
-                                line: side === 'LEFT' ? oldLineNumber : newLineNumber
-                            });
-                        }
-                        else {
-                            core.debug(`Match found but already commented`);
-                        }
+                const regex = new RegExp(regexPattern);
+                if (regex.test(line)) {
+                    // Before posting a new comment, check if it already exists
+                    const isDuplicate = existingComments.data.some(comment => comment.body === matchFoundMessage);
+                    if (!isDuplicate) {
+                        core.debug(`Match found`);
+                        foundMatches = true;
+                        const side = line.startsWith('+') ? 'RIGHT' : 'LEFT';
+                        const requestParams = {
+                            owner,
+                            repo,
+                            pull_number: pullRequestNumber,
+                            body: matchFoundMessage,
+                            commit_id: context.payload.pull_request.head.sha,
+                            path: currentFile,
+                            side,
+                            line: side === 'LEFT' ? oldLineNumber : newLineNumber
+                        };
+                        core.debug(JSON.stringify(requestParams));
+                        await octokit.rest.pulls.createReviewComment({
+                            owner,
+                            repo,
+                            pull_number: pullRequestNumber,
+                            body: matchFoundMessage,
+                            commit_id: context.payload.pull_request.head.sha,
+                            path: currentFile,
+                            side,
+                            line: side === 'LEFT' ? oldLineNumber : newLineNumber
+                        });
+                    }
+                    else {
+                        core.debug(`Match found but already commented`);
                     }
                 }
             }

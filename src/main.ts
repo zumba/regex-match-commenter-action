@@ -14,9 +14,9 @@ enum DiffScope {
 export async function run(): Promise<void> {
   try {
     const token: string = core.getInput('github_token', { required: true })
-    const regexPatterns: string[] = core
-      .getInput('regex_patterns', { required: true })
-      .split(',')
+    const regexPattern: string = core.getInput('regex_pattern', {
+      required: true
+    })
     const diffScope: DiffScope = (core.getInput('diff_scope') ||
       'both') as DiffScope
     const markChangesRequested: boolean =
@@ -98,43 +98,41 @@ export async function run(): Promise<void> {
         ((diffScope === DiffScope.BOTH || diffScope === DiffScope.REMOVED) &&
           line.startsWith('-'))
       ) {
-        for (const pattern of regexPatterns) {
-          const regex = new RegExp(pattern)
-          if (regex.test(line)) {
-            // Before posting a new comment, check if it already exists
-            const isDuplicate = existingComments.data.some(
-              comment => comment.body === matchFoundMessage
-            )
+        const regex = new RegExp(regexPattern)
+        if (regex.test(line)) {
+          // Before posting a new comment, check if it already exists
+          const isDuplicate = existingComments.data.some(
+            comment => comment.body === matchFoundMessage
+          )
 
-            if (!isDuplicate) {
-              core.debug(`Match found`)
-              foundMatches = true
-              const side = line.startsWith('+') ? 'RIGHT' : 'LEFT'
-              const requestParams = {
-                owner,
-                repo,
-                pull_number: pullRequestNumber,
-                body: matchFoundMessage,
-                commit_id: context.payload.pull_request.head.sha,
-                path: currentFile,
-                side,
-                line: side === 'LEFT' ? oldLineNumber : newLineNumber
-              }
-              core.debug(JSON.stringify(requestParams))
-
-              await octokit.rest.pulls.createReviewComment({
-                owner,
-                repo,
-                pull_number: pullRequestNumber,
-                body: matchFoundMessage,
-                commit_id: context.payload.pull_request.head.sha,
-                path: currentFile,
-                side,
-                line: side === 'LEFT' ? oldLineNumber : newLineNumber
-              })
-            } else {
-              core.debug(`Match found but already commented`)
+          if (!isDuplicate) {
+            core.debug(`Match found`)
+            foundMatches = true
+            const side = line.startsWith('+') ? 'RIGHT' : 'LEFT'
+            const requestParams = {
+              owner,
+              repo,
+              pull_number: pullRequestNumber,
+              body: matchFoundMessage,
+              commit_id: context.payload.pull_request.head.sha,
+              path: currentFile,
+              side,
+              line: side === 'LEFT' ? oldLineNumber : newLineNumber
             }
+            core.debug(JSON.stringify(requestParams))
+
+            await octokit.rest.pulls.createReviewComment({
+              owner,
+              repo,
+              pull_number: pullRequestNumber,
+              body: matchFoundMessage,
+              commit_id: context.payload.pull_request.head.sha,
+              path: currentFile,
+              side,
+              line: side === 'LEFT' ? oldLineNumber : newLineNumber
+            })
+          } else {
+            core.debug(`Match found but already commented`)
           }
         }
       }

@@ -1,5 +1,5 @@
 name: 'Regex Match Commenter Action'
-description: 'Searches for regex patterns in PR diffs and comments on them'
+description: 'Searches for regex pattern in PR diffs and comments on them'
 author: 'Zumba'
 
 branding:
@@ -11,8 +11,8 @@ inputs:
     description: 'GitHub token'
     required: true
 
-  regex_patterns:
-    description: 'List of regex patterns to search for'
+  regex_pattern:
+    description: 'Javascript regex pattern to search for'
     required: true
 
   diff_scope:
