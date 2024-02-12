@@ -1,4 +1,4 @@
-# Regex Match Commenter Action
+# Regular Expression Match Commenter Action
 
 [![GitHub Super-Linter](https://github.com/zumba/regex-match-commenter-action/actions/workflows/linter.yml/badge.svg)](https://github.com/super-linter/super-linter)
 ![CI](https://github.com/zumba/regex-match-commenter-action/actions/workflows/ci.yml/badge.svg)
@@ -6,44 +6,59 @@
 [![CodeQL](https://github.com/zumba/regex-match-commenter-action/actions/workflows/codeql-analysis.yml/badge.svg)](https://github.com/zumba/regex-match-commenter-action/actions/workflows/codeql-analysis.yml)
 [![Coverage](./badges/coverage.svg)](./badges/coverage.svg)
 
-This GitHub Action searches for specified regular expression pattern in the changes of a pull request. If matches are found, it can optionally mark the pull request for changes and add inline comments. If no matches are found, a comment is added to the pull request.
+This GitHub Action searches for specified regular expression pattern in the
+changes of a pull request. If matches are found, it can optionally mark the
+pull request for changes and add inline comments. If no matches are found,
+a comment is added to the pull request.
 
-Some use cases are for detecting PII changes on the code. For example, you can monitor if the words `email`, `phone`, `street`, `password`, etc. are part of the changes.
-The match uses regex, so you can also look for variables such as `\w+@\w+.\w+` to look for an actual e-mail address.
+Some use cases are for detecting PII changes on the code. For example, you can
+monitor if the words `email`, `phone`, `street`, `password`, etc. are part of
+the changes.
+The match uses regular expression, so you can also look for variables such as
+`\w+@\w+.\w+` to look for an actual email address.
 
 ## Inputs
 
 ### `github_token`
 
-**Required** GitHub token for authentication. Typically, this is the GitHub Actions token.
+**Required** GitHub token for authentication. Typically, this is the GitHub
+Actions token.
 
 ### `regex_pattern`
 
-**Required** A regular expression pattern to search for in the pull request diff.
+**Required** A regular expression pattern to search for in the pull
+request diff.
 
 ### `diff_scope`
 
-The scope of the diff to search. Can be `added`, `removed`, or `both`. Default is `both`.
+The scope of the diff to search. Can be `added`, `removed`, or `both`.
+Default is `both`.
 
 ### `mark_changes_requested`
 
-Boolean indicating whether the pull request should be marked as "request changes" if regex matches are found. Default is `false`.
+Boolean indicating whether the pull request should be marked as "request
+changes" if regular expression matches are found. Default is `false`.
 
 ### `match_found_message`
 
-Custom message for a regex match. This message is used for inline comments on the pull request. Default is `Regex match found.`.
+Custom message for a regular expression match. This message is used for inline
+comments on the pull request. Default is `Regex match found.`.
 
 ### `no_match_found_message`
 
-Custom message to comment on the pull request when no regex matches are found. Default is `No regex matches found in the diff.`
+Custom message to comment on the pull request when no regular expression
+matches are found. Default is `No regex matches found in the diff.`
 
 ### `changes_requested_message`
 
-Custom message for marking the pull request as changes requested. Used only if `mark_changes_requested` is `true`. Default is `Changes are requested due to regex match.`
+Custom message for marking the pull request as changes requested. Used only if
+`mark_changes_requested` is `true`. Default is
+`Changes are requested due to regex match.`
 
 ## Usage
 
-To use this action, create a workflow file (e.g., `.github/workflows/regex-match.yml`) in your repository:
+To use this action, create a workflow file (e.g.,
+`.github/workflows/regex-match.yml`) in your repository:
 
 ```yaml
 name: Regex Match
@@ -69,8 +84,8 @@ jobs:
 
 ## Contributing
 
-Contributions to this action are welcome! Please follow the standard GitHub pull request workflow to submit your changes.
-
+Contributions to this action are welcome! Please follow the standard GitHub
+pull request workflow to submit your changes.
 
 ## Development Setup
 

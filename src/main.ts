@@ -109,17 +109,6 @@ export async function run(): Promise<void> {
             core.debug(`Match found`)
             foundMatches = true
             const side = line.startsWith('+') ? 'RIGHT' : 'LEFT'
-            const requestParams = {
-              owner,
-              repo,
-              pull_number: pullRequestNumber,
-              body: matchFoundMessage,
-              commit_id: context.payload.pull_request.head.sha,
-              path: currentFile,
-              side,
-              line: side === 'LEFT' ? oldLineNumber : newLineNumber
-            }
-            core.debug(JSON.stringify(requestParams))
 
             await octokit.rest.pulls.createReviewComment({
               owner,
