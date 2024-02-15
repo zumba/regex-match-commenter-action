@@ -28953,6 +28953,13 @@ var DiffScope;
     DiffScope["ADDED"] = "added";
     DiffScope["REMOVED"] = "removed";
 })(DiffScope || (DiffScope = {}));
+const hiddenCommentMarkup = '<!-- This is an auto-generated comment: regex-match-commenter-action -->';
+function isDuplicateComment(existingComments, path, line, side) {
+    return existingComments.some(comment => comment.body.includes(hiddenCommentMarkup) &&
+        comment.path === path &&
+        comment.line === line &&
+        comment.side === side);
+}
 /**
  * The main function for the action.
  * @returns {Promise<void>} Resolves when the action is complete.
@@ -28971,7 +28978,7 @@ async function run() {
         const changesRequestedMessage = core.getInput('changes_requested_message');
         const octokit = github.getOctokit(token);
         const { context } = github;
-        core.debug('Fetching pull request ...');
+        core.info('Fetching pull request ...');
         if (context.payload.pull_request == null) {
             core.setFailed('No pull request found.');
             return;
@@ -28980,7 +28987,7 @@ async function run() {
         const owner = context.repo.owner;
         const repo = context.repo.repo;
         // Fetch PR diff
-        core.debug('Fetching pull request diff ...');
+        core.info('Fetching pull request diff ...');
         const { data: diffData } = await octokit.rest.pulls.get({
             owner,
             repo,
@@ -28990,22 +28997,30 @@ async function run() {
             }
         });
         // Fetch existing comments on the PR
-        core.debug('Fetching existing comments ...');
-        const existingComments = await octokit.rest.issues.listComments({
+        core.info('Fetching existing comments ...');
+        const existingComments = await octokit.rest.pulls.listReviewComments({
             owner,
             repo,
-            issue_number: pullRequestNumber
+            pull_number: pullRequestNumber
         });
+        core.debug(JSON.stringify(existingComments, null, 2));
         // Parse diff and search for regex matches
-        core.debug('Parsing diff and searching for matches ...');
+        core.info('Parsing diff and searching for matches ...');
         const lines = diffData.split('\n');
+        core.debug(JSON.stringify(lines, null, 2));
+        const regex = new RegExp(regexPattern);
+        const newComments = [];
         let foundMatches = false;
         let currentFile = '';
         let oldLineNumber = 0;
         let newLineNumber = 0;
         for (const line of lines) {
-            if (line.startsWith('+++ b/')) {
-                currentFile = line.substring('+++ b/'.length);
+            if (line.startsWith('diff --git a/')) {
+                currentFile = line.substring('diff --git a/'.length, line.indexOf(' b/'));
+                continue;
+            }
+            if (line.startsWith('--- a/') || line.startsWith('+++ b/')) {
+                // Ignore the file path lines
                 continue;
             }
             if (line.startsWith('@@')) {
@@ -29033,32 +29048,34 @@ async function run() {
                 line.startsWith('+')) ||
                 ((diffScope === DiffScope.BOTH || diffScope === DiffScope.REMOVED) &&
                     line.startsWith('-'))) {
-                const regex = new RegExp(regexPattern);
                 if (regex.test(line)) {
-                    // Before posting a new comment, check if it already exists
-                    const isDuplicate = existingComments.data.some(comment => comment.body === matchFoundMessage);
+                    const side = line.startsWith('+') ? 'RIGHT' : 'LEFT';
+                    const isDuplicate = isDuplicateComment(existingComments.data, currentFile, side === 'RIGHT' ? newLineNumber : oldLineNumber, side);
+                    foundMatches = true;
+                    core.debug(`Regex matched ...`);
+                    core.debug(JSON.stringify({
+                        currentFile,
+                        lineContent: line,
+                        lineNumber: side === 'RIGHT' ? newLineNumber : oldLineNumber,
+                        isDuplicate
+                    }, null, 2));
                     if (!isDuplicate) {
-                        core.debug(`Match found`);
-                        foundMatches = true;
-                        const side = line.startsWith('+') ? 'RIGHT' : 'LEFT';
-                        await octokit.rest.pulls.createReviewComment({
-                            owner,
-                            repo,
-                            pull_number: pullRequestNumber,
-                            body: matchFoundMessage,
-                            commit_id: context.payload.pull_request.head.sha,
+                        core.info(`Match found`);
+                        newComments.push({
                             path: currentFile,
-                            side,
-                            line: side === 'LEFT' ? oldLineNumber : newLineNumber
+                            body: `${hiddenCommentMarkup}\n${matchFoundMessage}`,
+                            line: side === 'RIGHT' ? newLineNumber : oldLineNumber,
+                            side
                         });
                     }
                     else {
-                        core.debug(`Match found but already commented`);
+                        core.info(`Match found but already commented`);
                     }
                 }
             }
         }
         if (!foundMatches) {
+            core.info('Adding comment about no matches found ...');
             await octokit.rest.issues.createComment({
                 owner,
                 repo,
@@ -29066,16 +29083,18 @@ async function run() {
                 body: noMatchFoundMessage
             });
         }
-        // Optional: Mark PR as changes requested
-        if (markChangesRequested && foundMatches) {
+        if (newComments.length > 0) {
+            core.info('Adding comments to the pull request ...');
             await octokit.rest.pulls.createReview({
                 owner,
                 repo,
                 pull_number: pullRequestNumber,
-                event: 'REQUEST_CHANGES',
-                body: changesRequestedMessage
+                event: markChangesRequested ? 'REQUEST_CHANGES' : undefined,
+                body: changesRequestedMessage,
+                comments: newComments
             });
         }
+        // If there are no matches and no new comments, then we don't need to update the PR
     }
     catch (error) {
         // Fail the workflow run if an error occurs
